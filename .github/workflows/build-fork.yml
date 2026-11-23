@@ -30,8 +30,10 @@ jobs:
 
       - name: Install NDK
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager --install "ndk;21.4.7075529"
+          SDKMANAGER=$(find "$ANDROID_HOME" -maxdepth 4 -name sdkmanager -type f | sort -V | tail -n1)
+          echo "Using sdkmanager: $SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" --install "ndk;21.4.7075529"
 
       - name: Free up disk space
         run: |
