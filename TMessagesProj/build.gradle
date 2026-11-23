@@ -144,8 +144,9 @@ android {
             keyPassword localProperties.getProperty("SIGNING_KEY_PASSWORD")
         }
         // توقيع خاص بهذا الـFork الشخصي: لا نملك مفاتيح توقيع AyuGram الرسمية (سرية وخاصة بفريقهم)،
-        // فنوقّع ببصمة ذاتية جديدة. هذا يمنع التحديث فوق تثبيت AyuGram الرسمي (توقيعان مختلفان)،
-        // لذا غيّرنا أيضاً applicationId في gradle.properties كي يثبَّت كتطبيق منفصل بلا تعارض.
+        // فنوقّع ببصمة ذاتية جديدة. لم نغيّر applicationId (أبقيناه com.radolyn.ayugram) لأن
+        // google-services.json الخاص بـ Firebase مربوط به تحديدًا؛ النتيجة العملية: إن كان لديك
+        // تطبيق AyuGram الرسمي مثبتًا بنفس المعرّف لكن بتوقيع مختلف، يجب إزالته أولاً قبل تثبيت هذه النسخة.
         fork {
             storeFile file("config/fork.jks")
             storePassword "ayugramfork"
