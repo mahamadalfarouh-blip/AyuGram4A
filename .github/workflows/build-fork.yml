@@ -9,7 +9,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
           fetch-depth: 0
 
       # نفس القيم العامة التي يستخدمها مستودع AyuGram الأصلي في سير عمله المنشور للعلن (ليست سرية)
