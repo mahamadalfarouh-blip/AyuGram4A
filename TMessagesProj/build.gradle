@@ -143,6 +143,15 @@ android {
             keyAlias localProperties.getProperty("SIGNING_KEY_ALIAS")
             keyPassword localProperties.getProperty("SIGNING_KEY_PASSWORD")
         }
+        // توقيع خاص بهذا الـFork الشخصي: لا نملك مفاتيح توقيع AyuGram الرسمية (سرية وخاصة بفريقهم)،
+        // فنوقّع ببصمة ذاتية جديدة. هذا يمنع التحديث فوق تثبيت AyuGram الرسمي (توقيعان مختلفان)،
+        // لذا غيّرنا أيضاً applicationId في gradle.properties كي يثبَّت كتطبيق منفصل بلا تعارض.
+        fork {
+            storeFile file("config/fork.jks")
+            storePassword "ayugramfork"
+            keyAlias "forkkey"
+            keyPassword "ayugramfork"
+        }
     }
 
     packagingOptions.exclude 'META-INF/DEPENDENCIES'
@@ -151,7 +160,7 @@ android {
         debug {
             debuggable true
             jniDebuggable false
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.fork
             minifyEnabled false
             shrinkResources false
             multiDexEnabled true
@@ -165,7 +174,7 @@ android {
         release {
             debuggable false
             jniDebuggable false
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.fork
             minifyEnabled true
             shrinkResources true
             multiDexEnabled true

@@ -47,6 +47,9 @@ public class AyuConstants {
     public static String DEFAULT_DELETED_MARK = "🧹";
     public static String DEFAULT_AYUSYNC_SERVER = BuildVars.isBetaApp() ? "ayusync-dev.radolyn.com:5000" : "ayusync.cloud";
 
+    public static String DEFAULT_AI_REPLY_MODEL = "claude-sonnet-5-5";
+    public static String DEFAULT_AI_REPLY_PROMPT = "اقترح ردًا قصيرًا ومهذبًا وطبيعيًا بنفس لغة الرسالة الواردة، دون أي شرح أو مقدمات أو علامات اقتباس، فقط نص الرد نفسه جاهزًا للإرسال.";
+
     public static String AYU_DATABASE = "ayu-data";
 
     public static String APP_GITHUB = "AyuGram/AyuGram4A";

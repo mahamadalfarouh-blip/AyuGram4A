@@ -56,6 +56,7 @@ public class AyuGramPreferencesActivity extends BasePreferencesActivity implemen
     private int disableAdsRow;
     private int localPremiumRow;
     private int filtersRow;
+    private int aiReplyBtnRow;
     private int qolDividerRow;
 
     private int customizationHeaderRow;
@@ -110,6 +111,7 @@ public class AyuGramPreferencesActivity extends BasePreferencesActivity implemen
         disableAdsRow = newRow();
         localPremiumRow = newRow();
         filtersRow = newRow();
+        aiReplyBtnRow = newRow();
         qolDividerRow = newRow();
 
         customizationHeaderRow = newRow();
@@ -267,6 +269,8 @@ public class AyuGramPreferencesActivity extends BasePreferencesActivity implemen
             } else {
                 presentFragment(new RegexFiltersPreferencesActivity());
             }
+        } else if (position == aiReplyBtnRow) {
+            presentFragment(new AyuAiReplyPreferencesActivity());
         } else if (position == showGhostToggleInDrawerRow) {
             AyuConfig.editor.putBoolean("showGhostToggleInDrawer", AyuConfig.showGhostToggleInDrawer ^= true).apply();
             ((TextCheckCell) view).setChecked(AyuConfig.showGhostToggleInDrawer);
@@ -365,6 +369,8 @@ public class AyuGramPreferencesActivity extends BasePreferencesActivity implemen
                     textCell.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
                     if (position == messageSavingBtnRow) {
                         textCell.setText(LocaleController.getString(R.string.MessageSavingBtn), false);
+                    } else if (position == aiReplyBtnRow) {
+                        textCell.setText(LocaleController.getString(R.string.AiReplyHeader), true);
                     } else if (position == deletedMarkTextRow) {
                         textCell.setTextAndValue(LocaleController.getString(R.string.DeletedMarkText), AyuConfig.getDeletedMark(), true);
                     } else if (position == editedMarkTextRow) {
@@ -487,6 +493,7 @@ public class AyuGramPreferencesActivity extends BasePreferencesActivity implemen
                 return 1;
             } else if (
                     position == messageSavingBtnRow ||
+                            position == aiReplyBtnRow ||
                             position == deletedMarkTextRow ||
                             position == editedMarkTextRow ||
                             position == ayuSyncStatusBtnRow ||

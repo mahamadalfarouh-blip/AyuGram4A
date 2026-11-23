@@ -54,6 +54,10 @@ public class AyuConfig {
     public static boolean useSecureConnection;
     public static boolean WALMode;
 
+    // ~ AI reply suggestion
+    public static boolean aiReplyEnabled;
+    public static boolean aiReplyPrivateChatsOnly;
+
     private static boolean configLoaded;
 
     static {
@@ -114,6 +118,10 @@ public class AyuConfig {
             // syncServerToken
             syncEnabled = preferences.getBoolean("syncEnabled", false);
             useSecureConnection = preferences.getBoolean("useSecureConnection", !BuildVars.isBetaApp());
+
+            // ~ AI reply suggestion
+            aiReplyEnabled = preferences.getBoolean("aiReplyEnabled", false);
+            aiReplyPrivateChatsOnly = preferences.getBoolean("aiReplyPrivateChatsOnly", true);
 
             // ~ Debug
             WALMode = preferences.getBoolean("walMode", true);
@@ -187,6 +195,19 @@ public class AyuConfig {
 
     public static String getSyncServerToken() {
         return preferences.getString("syncServerToken", "");
+    }
+
+    // يُخزَّن محليًا فقط على هذا الجهاز (SharedPreferences)، ولا يُرسل إلا إلى Anthropic مباشرة.
+    public static String getAiReplyApiKey() {
+        return preferences.getString("aiReplyApiKey", "");
+    }
+
+    public static String getAiReplyModel() {
+        return preferences.getString("aiReplyModel", AyuConstants.DEFAULT_AI_REPLY_MODEL);
+    }
+
+    public static String getAiReplyPrompt() {
+        return preferences.getString("aiReplyPrompt", AyuConstants.DEFAULT_AI_REPLY_PROMPT);
     }
 
     public static ArrayList<String> getRegexFilters() {
