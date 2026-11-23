@@ -10,7 +10,9 @@
 package com.radolyn.ayugram.ai;
 
 import android.text.TextUtils;
+import android.widget.Toast;
 import com.radolyn.ayugram.AyuConfig;
+import com.radolyn.ayugram.AyuConstants;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -19,6 +21,7 @@ import okhttp3.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.Utilities;
@@ -31,10 +34,12 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
- * يقترح ردًا على آخر رسالة واردة باستخدام Anthropic API، ويضعه في خانة الكتابة
- * دون إرساله تلقائيًا: المستخدم هو من يراجع ويعدّل ويضغط إرسال.
+ * يقترح ردًا على آخر رسالة واردة باستخدام أي خدمة متوافقة مع صيغة OpenAI chat/completions
+ * (Groq، OpenRouter، Anthropic عبر /v1/messages، أو حتى خادم FreeLLMApi تشغّله بنفسك)،
+ * ويضعه في خانة الكتابة دون إرساله تلقائيًا: المستخدم هو من يراجع ويعدّل ويضغط إرسال.
  * <p>
- * مفتاح الـAPI يُخزَّن محليًا فقط على هذا الجهاز ولا يُرسل إلا مباشرة إلى api.anthropic.com.
+ * مفتاح الـAPI والعنوان (Base URL) يُخزَّنان محليًا فقط على هذا الجهاز ولا يُرسلان إلا
+ * مباشرة إلى العنوان الذي اخترته أنت في الإعدادات.
  */
 public class AyuAiReply {
 
@@ -87,15 +92,18 @@ public class AyuAiReply {
 
         String incomingText = lastIncoming.messageText.toString();
         String apiKeyFinal = apiKey;
+        String baseUrl = AyuConfig.getAiReplyBaseUrl();
         String model = AyuConfig.getAiReplyModel();
         String systemPrompt = AyuConfig.getAiReplyPrompt();
 
         Utilities.globalQueue.postRunnable(() -> {
             String suggestion = null;
+            String errorMessage = null;
             try {
-                suggestion = callAnthropic(apiKeyFinal, model, systemPrompt, incomingText);
+                suggestion = callChatCompletions(baseUrl, apiKeyFinal, model, systemPrompt, incomingText);
             } catch (Exception e) {
                 FileLog.e("AyuAiReply: request failed", e);
+                errorMessage = e.getMessage();
             } finally {
                 pendingDialogs.remove(dialogId);
             }
@@ -103,8 +111,20 @@ public class AyuAiReply {
             if (!TextUtils.isEmpty(suggestion)) {
                 String finalSuggestion = suggestion;
                 AndroidUtilities.runOnUIThread(() -> applySuggestion(activity, dialogId, finalSuggestion));
+            } else {
+                String finalError = errorMessage;
+                AndroidUtilities.runOnUIThread(() -> showFailureToast(finalError));
             }
         });
+    }
+
+    private static void showFailureToast(String errorMessage) {
+        var context = ApplicationLoader.applicationContext;
+        if (context == null) {
+            return;
+        }
+        String text = "AI reply: " + (TextUtils.isEmpty(errorMessage) ? "failed (see logs)" : errorMessage);
+        Toast.makeText(context, text, Toast.LENGTH_LONG).show();
     }
 
     private static void applySuggestion(ChatActivity activity, long dialogId, String suggestion) {
@@ -123,40 +143,77 @@ public class AyuAiReply {
         field.setSelection(field.length());
     }
 
-    private static String callAnthropic(String apiKey, String model, String systemPrompt, String incomingText) throws Exception {
+    /**
+     * يتحدث بصيغة OpenAI chat/completions القياسية، التي تدعمها تقريبًا كل الخدمات المجانية
+     * (Groq، OpenRouter بنماذجه المجانية :free، أو خادم FreeLLMApi تشغّله بنفسك محليًا).
+     * {@code baseUrl} هو عنوان الخدمة بدون "/chat/completions" في آخره، مثل:
+     * https://api.groq.com/openai/v1  أو  https://openrouter.ai/api/v1  أو  http://127.0.0.1:3001/v1
+     */
+    private static String callChatCompletions(String baseUrl, String apiKey, String model, String systemPrompt, String incomingText) throws Exception {
         JSONObject body = new JSONObject();
         body.put("model", model);
         body.put("max_tokens", 300);
-        body.put("system", systemPrompt);
 
         JSONArray messages = new JSONArray();
+
+        if (!TextUtils.isEmpty(systemPrompt)) {
+            JSONObject systemMessage = new JSONObject();
+            systemMessage.put("role", "system");
+            systemMessage.put("content", systemPrompt);
+            messages.put(systemMessage);
+        }
+
         JSONObject userMessage = new JSONObject();
         userMessage.put("role", "user");
         userMessage.put("content", incomingText);
         messages.put(userMessage);
         body.put("messages", messages);
 
+        String url = (TextUtils.isEmpty(baseUrl) ? AyuConstants.DEFAULT_AI_REPLY_BASE_URL : baseUrl);
+        if (url.endsWith("/")) {
+            url = url.substring(0, url.length() - 1);
+        }
+        url += "/chat/completions";
+
         Request request = new Request.Builder()
-                .url("https://api.anthropic.com/v1/messages")
-                .addHeader("x-api-key", apiKey)
-                .addHeader("anthropic-version", "2023-06-01")
+                .url(url)
+                .addHeader("Authorization", "Bearer " + apiKey)
                 .addHeader("content-type", "application/json")
                 .post(RequestBody.create(body.toString(), JSON))
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
-            if (!response.isSuccessful() || response.body() == null) {
-                FileLog.e("AyuAiReply: HTTP " + response.code());
-                return null;
+            String responseBody = response.body() != null ? response.body().string() : "";
+
+            if (!response.isSuccessful()) {
+                String detail = extractErrorMessage(responseBody);
+                FileLog.e("AyuAiReply: HTTP " + response.code() + " " + responseBody);
+                throw new Exception("HTTP " + response.code() + (detail != null ? ": " + detail : ""));
             }
 
-            JSONObject json = new JSONObject(response.body().string());
-            JSONArray content = json.optJSONArray("content");
-            if (content == null || content.length() == 0) {
+            JSONObject json = new JSONObject(responseBody);
+            JSONArray choices = json.optJSONArray("choices");
+            if (choices == null || choices.length() == 0) {
                 return null;
             }
-            String text = content.getJSONObject(0).optString("text", null);
+            JSONObject message = choices.getJSONObject(0).optJSONObject("message");
+            String text = message != null ? message.optString("content", null) : null;
             return text != null ? text.trim() : null;
         }
+    }
+
+    private static String extractErrorMessage(String responseBody) {
+        if (TextUtils.isEmpty(responseBody)) {
+            return null;
+        }
+        try {
+            JSONObject json = new JSONObject(responseBody);
+            JSONObject error = json.optJSONObject("error");
+            if (error != null) {
+                return error.optString("message", null);
+            }
+        } catch (Exception ignored) {
+        }
+        return responseBody.length() > 200 ? responseBody.substring(0, 200) : responseBody;
     }
 }

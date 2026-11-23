@@ -30,6 +30,7 @@ public class AyuAiReplyPreferencesActivity extends BasePreferencesActivity {
     private int headerRow;
     private int enabledRow;
     private int privateOnlyRow;
+    private int baseUrlRow;
     private int apiKeyRow;
     private int modelRow;
     private int promptRow;
@@ -42,6 +43,7 @@ public class AyuAiReplyPreferencesActivity extends BasePreferencesActivity {
         headerRow = newRow();
         enabledRow = newRow();
         privateOnlyRow = newRow();
+        baseUrlRow = newRow();
         apiKeyRow = newRow();
         modelRow = newRow();
         promptRow = newRow();
@@ -62,6 +64,18 @@ public class AyuAiReplyPreferencesActivity extends BasePreferencesActivity {
         } else if (position == privateOnlyRow) {
             AyuConfig.editor.putBoolean("aiReplyPrivateChatsOnly", AyuConfig.aiReplyPrivateChatsOnly ^= true).apply();
             ((TextCheckCell) view).setChecked(AyuConfig.aiReplyPrivateChatsOnly);
+        } else if (position == baseUrlRow) {
+            AyuUi.spawnEditBox(
+                    getParentActivity(),
+                    ((TextCell) view),
+                    LocaleController.getString(R.string.AiReplyBaseUrl),
+                    AyuConfig::getAiReplyBaseUrl,
+                    "aiReplyBaseUrl",
+                    AyuConstants.DEFAULT_AI_REPLY_BASE_URL,
+                    s -> {
+                    },
+                    String::trim
+            );
         } else if (position == apiKeyRow) {
             AyuUi.spawnEditBox(
                     getParentActivity(),
@@ -130,7 +144,9 @@ public class AyuAiReplyPreferencesActivity extends BasePreferencesActivity {
             switch (holder.getItemViewType()) {
                 case 2:
                     TextCell textCell = (TextCell) holder.itemView;
-                    if (position == apiKeyRow) {
+                    if (position == baseUrlRow) {
+                        textCell.setTextAndValue(LocaleController.getString(R.string.AiReplyBaseUrl), AyuConfig.getAiReplyBaseUrl(), true);
+                    } else if (position == apiKeyRow) {
                         textCell.setTextAndValue(LocaleController.getString(R.string.AiReplyApiKey), maskedKey(), true);
                     } else if (position == modelRow) {
                         textCell.setTextAndValue(LocaleController.getString(R.string.AiReplyModel), AyuConfig.getAiReplyModel(), true);
@@ -164,7 +180,7 @@ public class AyuAiReplyPreferencesActivity extends BasePreferencesActivity {
 
         @Override
         public int getItemViewType(int position) {
-            if (position == apiKeyRow || position == modelRow || position == promptRow) {
+            if (position == baseUrlRow || position == apiKeyRow || position == modelRow || position == promptRow) {
                 return 2;
             } else if (position == headerRow) {
                 return 3;

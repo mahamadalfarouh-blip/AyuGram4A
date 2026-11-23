@@ -47,7 +47,10 @@ public class AyuConstants {
     public static String DEFAULT_DELETED_MARK = "🧹";
     public static String DEFAULT_AYUSYNC_SERVER = BuildVars.isBetaApp() ? "ayusync-dev.radolyn.com:5000" : "ayusync.cloud";
 
-    public static String DEFAULT_AI_REPLY_MODEL = "claude-sonnet-5-5";
+    // أي رابط متوافق مع صيغة OpenAI chat/completions: Groq، OpenRouter، أو حتى خادم FreeLLMApi
+    // تشغّله أنت بنفسك. القيمة الافتراضية هنا هي Groq (مجاني فعليًا بدون بطاقة ائتمان).
+    public static String DEFAULT_AI_REPLY_BASE_URL = "https://api.groq.com/openai/v1";
+    public static String DEFAULT_AI_REPLY_MODEL = "llama-3.3-70b-versatile";
     public static String DEFAULT_AI_REPLY_PROMPT = "اقترح ردًا قصيرًا ومهذبًا وطبيعيًا بنفس لغة الرسالة الواردة، دون أي شرح أو مقدمات أو علامات اقتباس، فقط نص الرد نفسه جاهزًا للإرسال.";
 
     public static String AYU_DATABASE = "ayu-data";

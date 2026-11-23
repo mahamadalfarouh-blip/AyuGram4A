@@ -50,12 +50,13 @@
   <string name="AiReplyHeader">AI reply suggestion</string>
   <string name="AiReplyEnable">Enable AI reply suggestion</string>
   <string name="AiReplyPrivateOnly">Private chats only</string>
-  <string name="AiReplyApiKey">Anthropic API key</string>
+  <string name="AiReplyBaseUrl">API Base URL (OpenAI-compatible)</string>
+  <string name="AiReplyApiKey">API key</string>
   <string name="AiReplyApiKeyNotSet">not set</string>
   <string name="AiReplyModel">Model</string>
   <string name="AiReplyPrompt">Instruction to the model</string>
   <string name="AiReplyPromptValue">tap to edit</string>
-  <string name="AiReplyInfo">When a new message arrives in an open chat, a suggested reply is generated with your own Anthropic API key and placed in the text field — nothing is sent automatically, and nothing is sent to anyone but Anthropic\'s API.</string>
+  <string name="AiReplyInfo">When a new message arrives in an open chat, a suggested reply is generated with your own API key through the Base URL you set (any OpenAI-compatible service: Groq, OpenRouter, a self-hosted FreeLLMApi, etc.) and placed in the text field — nothing is sent automatically, and nothing is sent to anyone but that address.</string>
   <string name="AyuSyncHeader">AyuSync</string>
   <string name="AyuSyncStatusTitle">Sync status</string>
   <string name="AyuSyncStatusOk">connected</string>

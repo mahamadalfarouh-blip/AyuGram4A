@@ -197,9 +197,15 @@ public class AyuConfig {
         return preferences.getString("syncServerToken", "");
     }
 
-    // يُخزَّن محليًا فقط على هذا الجهاز (SharedPreferences)، ولا يُرسل إلا إلى Anthropic مباشرة.
+    // يُخزَّن محليًا فقط على هذا الجهاز (SharedPreferences)، ولا يُرسل إلا مباشرة إلى عنوان الـBase URL أدناه.
     public static String getAiReplyApiKey() {
         return preferences.getString("aiReplyApiKey", "");
+    }
+
+    // عنوان أي خدمة متوافقة مع صيغة OpenAI (مثل Groq أو OpenRouter أو خادم FreeLLMApi الخاص بك)،
+    // بدون "/chat/completions" في النهاية (تُضاف تلقائيًا).
+    public static String getAiReplyBaseUrl() {
+        return preferences.getString("aiReplyBaseUrl", AyuConstants.DEFAULT_AI_REPLY_BASE_URL);
     }
 
     public static String getAiReplyModel() {
