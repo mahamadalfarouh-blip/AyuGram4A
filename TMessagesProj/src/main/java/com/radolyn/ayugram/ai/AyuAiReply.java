@@ -29,7 +29,9 @@ import org.telegram.ui.ChatActivity;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -52,6 +54,10 @@ public class AyuAiReply {
 
     // لمنع إرسال عدة طلبات متزامنة لنفس المحادثة إذا وصلت عدة رسائل سريعًا متتابعة.
     private static final Set<Long> pendingDialogs = Collections.synchronizedSet(new HashSet<>());
+
+    // آخر اقتراح وضعناه نحن في خانة الكتابة لكل محادثة، كي نستطيع استبداله باقتراح جديد
+    // دون أن نلمس نصًا كتبه المستخدم بنفسه (لو كان النص الحالي مطابقًا لآخر اقتراح منا، فهو لم يُعدَّل بعد).
+    private static final Map<Long, String> lastAppliedSuggestion = Collections.synchronizedMap(new HashMap<>());
 
     private AyuAiReply() {
     }
@@ -136,11 +142,22 @@ public class AyuAiReply {
             return;
         }
         var field = enterView.getEditField();
-        if (field == null || field.length() > 0) {
-            return; // لا تستبدل نصًا كتبه المستخدم بالفعل
+        if (field == null) {
+            return;
         }
+
+        String currentText = field.length() > 0 ? field.getText().toString() : "";
+        String previousSuggestion = lastAppliedSuggestion.get(dialogId);
+        boolean isEmpty = currentText.isEmpty();
+        boolean isUntouchedPreviousSuggestion = previousSuggestion != null && previousSuggestion.equals(currentText);
+
+        if (!isEmpty && !isUntouchedPreviousSuggestion) {
+            return; // المستخدم كتب نصًا من عنده (مختلفًا عن آخر اقتراح منا) فلا نلمسه
+        }
+
         field.setText(suggestion);
         field.setSelection(field.length());
+        lastAppliedSuggestion.put(dialogId, suggestion);
     }
 
     /**
